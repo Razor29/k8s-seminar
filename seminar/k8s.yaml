@@ -1,0 +1,14 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: k8s-deployment
+spec:
+ containers: 
+ - name: bear
+   image: supergiantkir/animals:bear
+   ports: 
+   - containerPort: 80
+ - name: juice-shop
+   image: bkimminich/juice-shop
+   ports: 
+   - containerPort: 3000
