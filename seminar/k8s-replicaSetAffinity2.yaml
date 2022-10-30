@@ -1,70 +1,72 @@
 apiVersion: apps/v1
 kind: ReplicaSet
-metadata: 
- name: apps
- labels:
-   tier: frontend
+metadata:
+  name: spring-pod-affinity
+  labels:
+    app: spring-music
+    tier: frontend
 spec:
-  affinity:
-	podAffinity:
-	  requiredDuringSchedulingIgnoredDuringExecution:
-	  - labelSelector:
-		  matchExpressions:
-		  - key: cache
-			operator: In
-			values:
-			- redis
-		topologyKey: topology.kubernetes.io/zone
-	podAntiAffinity:
-	  requiredDuringSchedulingIgnoredDuringExecution:
-	  - labelSelector:
-			matchExpressions:
-			- key: app
-			  operator: In
-			  values:
-			  - spring-music
-            topologyKey: topology.kubernetes.io/zone
-  replicas: 3
-  selector:  # Using the selector we tell our replicaset which pods to manage
+  replicas: 2
+  selector:  
     matchLabels:
-      tier: frontend
-  template:   # here we define our PODS Specs (k8s uses go template in the background)
+      app: spring-music
+  template:   
     metadata:
       labels:
-        tier: frontend
+        app: spring-music
     spec:
       affinity:
-        nodeAffinity:
+        podAffinity:
           requiredDuringSchedulingIgnoredDuringExecution:
-            nodeSelectorTerms:
-            - matchExpressions:
-              - key: topology.kubernetes.io/zone
-                operator: In
-                values:
-                - eu-west-1b
-                - eu-west-1c
-          preferredDuringSchedulingIgnoredDuringExecution:
-          - weight: 1
-            preference:
+          - labelSelector:
               matchExpressions:
-              - key: node.kubernetes.io/instance-type
+              - key: cache
                 operator: In
                 values:
-                - t3.large
-      containers: 
-      - name: app1
-        image: supergiantkir/animals:bear
-        ports: 
-        - containerPort: 80
-        volumeMounts:
-        - mountPath: /storage/app1
-          name: app-storage
-      - name: app2
+                - redis
+            topologyKey: topology.kubernetes.io/zone
+        podAntiAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+          - labelSelector:
+                matchExpressions:
+                - key: app
+                  operator: In
+                  values:
+                  - spring-music
+            topologyKey: topology.kubernetes.io/zone
+      containers:
+      - name: spring-music
         image: yanivomc/spring-music:latest
-        ports: 
-        - containerPort: 3000
-        volumeMounts:
-        - mountPath: /storage/app2
-          name: app-storage
-      volumes:
-        - name: app-storage
+
+
+---
+
+## THIS will start a redis pod as part of the example and affinity rule above
+apiVersion: v1
+kind: Pod
+metadata:
+  name: redis-cache
+  labels:
+    cache: redis
+spec:
+  affinity:
+    nodeAffinity:
+      requiredDuringSchedulingIgnoredDuringExecution:
+        nodeSelectorTerms:
+        - matchExpressions:
+          - key: topology.kubernetes.io/zone
+            operator: In
+            values:
+            - eu-west-1b
+            - eu-west-1c
+      preferredDuringSchedulingIgnoredDuringExecution:
+      - weight: 1
+        preference:
+          matchExpressions:
+          - key: node.kubernetes.io/instance-type
+            operator: In
+            values:
+            - t3.large
+  containers:
+  - name: redis
+    image: redis:latest
