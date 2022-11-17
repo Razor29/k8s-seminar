@@ -1,0 +1,23 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nginx-deployment-1
+spec:
+  selector:
+    matchLabels:
+      app: nginx
+  replicas: 2
+  strategy:
+    type: Recreate
+  template: 
+    metadata:
+      labels:
+        app: nginx
+    spec:
+      containers:
+      - name: nginx
+        image: nginx:latest
+        ports:
+        - containerPort: 80
+
+# kubectl expose deployment nginx-deployment-1 --port=80 --target-port=80
