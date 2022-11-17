@@ -1,0 +1,23 @@
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: test
+  namespace: default
+  labels:
+    k8s-app: test
+spec:
+  selector:
+    matchLabels:
+      name: test
+  template:
+    metadata:
+      labels:
+        name: test
+    spec:
+      containers:
+      - name: test
+        image: alpine:latest
+		command:
+		- /bin/sh
+        - -c
+        - sleep 100000
